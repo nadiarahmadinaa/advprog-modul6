@@ -3,7 +3,7 @@
 Method handle_connection berfungsi untuk menghandle request dari TCP stream.
 Method ini mengambil input TcpStream, melakukan proses parsing terhadap request, dan mencetak request HTTPnya.
 Pertama, kita inisiasi dua variabel,  `buf_reader` untuk membaca input, dan `http_request` untuk menyimpan output.
-`http_request` akan diisi oleh buffer dari `buf_reader` yang di-unwrap oleh `.map(|result| result.unwrap())` hingga ditemukan empty line. Kemudian, hasil request yang sudah di-parse ini akan di cetak.
+`http_request` akan diisi oleh buffer dari `buf_reader` yang di-unwrap oleh `.map(|result| result.unwrap())` hingga ditemukan empty line. Kemudian, hasil request yang sudah di-parse ini akan di cetak. Fungsi ini akan berjalan setiap kali seorang user membuat request ke server.
 
 ## Commit 2 Reflection Notes
 ![Commit 2 screen capture](/assets/images/screenshot_commit2.jpg)
@@ -55,11 +55,14 @@ let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
 
     stream.write_all(response.as_bytes()).unwrap();
 ```
-Refactor ini diperlukan untuk menghindari code duplication yang terdapat pada kedua if-else case. Terdapat logic yang sama pada penulisan status_line, mendapatkan contents, mendapatkan length, dan merakit response. Dari if else case tersebut, hanya perlu dimasukkan status_line dan filename yang berbeda dari masing-masing case. Refactor ini memberikan readability yang lebih baik dan menghindari repetisi, serta memberikan ruang untuk code extension.
+Refactor ini diperlukan untuk menghindari code duplication yang terdapat pada kedua if-else case. Terdapat logic yang sama pada penulisan status_line, mendapatkan contents, mendapatkan length, dan merakit response. Dari if else case tersebut, hanya perlu dimasukkan status_line dan filename yang berbeda dari masing-masing case. Refactor ini memberikan readability yang lebih baik dan menghindari repetisi. Dengan demikian, kita juga memberikan ruang untuk code extension pada masa yang akan datang.
 
 ## Commit 4 Reflection Notes
 Dengan tambahan baru pada method handle_connection, disini kita membuat route baru yaity /sleep. Ketika user mengakses route ini, mereka akan harus menunggu 10 detik. Berikut snippet code yang mempengaruhi behaviour tersebut:
 ```
 thread::sleep(Duration::from_secs(10)); 
 ```
-Setelah sleep selama 10 detik, kita akan diarahkan ke konten hello.html. Hal ini merupakan simulasi dari server yang lambat, dimana user harus menunggu beberapa waktu sebelum bisa mengakses suatu endpoint.
+Setelah sleep selama 10 detik, kita akan diarahkan ke konten hello.html. Hal ini merupakan simulasi dari server yang lambat. Server yang lambat tidak optimal karena user harus menunggu beberapa waktu sebelum bisa mengakses suatu endpoint.
+
+## Commit 5 Reflection Notes
+Pada commit ini, saya sudah menerapkan multithreaded server dengan memanfaatkan ThreadPool. ThreadPool ini terdiri dari beberapa Worker yang menjalankan loop untuk menerima request. Request tersebut dikirim melalui (mpsc::channel). Ketika request diterima, server akan melakukan klasifikasi dan memprosesnya sesuai dengan route yang dituju. Kode ini juga menerapkan Arc dan Mutex untuk memastikan data integrity dan mencegah race condition. Dengan cara ini, suatu server dapat menerima dan memproses beberapa request sekaligus tanpa terbebani load yang besar. Maka, pengguna tidak akan mengalami waiting time yang lama seperti yang dihadapi pada simulasi commit ke-4 yaitu sleep 10 detik.
