@@ -56,3 +56,10 @@ let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
     stream.write_all(response.as_bytes()).unwrap();
 ```
 Refactor ini diperlukan untuk menghindari code duplication yang terdapat pada kedua if-else case. Terdapat logic yang sama pada penulisan status_line, mendapatkan contents, mendapatkan length, dan merakit response. Dari if else case tersebut, hanya perlu dimasukkan status_line dan filename yang berbeda dari masing-masing case. Refactor ini memberikan readability yang lebih baik dan menghindari repetisi, serta memberikan ruang untuk code extension.
+
+## Commit 4 Reflection Notes
+Dengan tambahan baru pada method handle_connection, disini kita membuat route baru yaity /sleep. Ketika user mengakses route ini, mereka akan harus menunggu 10 detik. Berikut snippet code yang mempengaruhi behaviour tersebut:
+```
+thread::sleep(Duration::from_secs(10)); 
+```
+Setelah sleep selama 10 detik, kita akan diarahkan ke konten hello.html. Hal ini merupakan simulasi dari server yang lambat, dimana user harus menunggu beberapa waktu sebelum bisa mengakses suatu endpoint.
