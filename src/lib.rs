@@ -11,6 +11,32 @@ pub struct ThreadPool {
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool {
+    /// Create a new ThreadPool, returning a Result.
+    ///
+    /// The size is the number of threads in the pool.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the size is zero.
+    pub fn build(size: usize) -> Result<ThreadPool, String> {
+        if size == 0 {
+            return Err(String::from("ThreadPool size must be greater than 0"));
+        }
+
+        let (sender, receiver) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(receiver));
+
+        let mut workers = Vec::with_capacity(size);
+
+        for id in 0..size {
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
+        }
+
+        Ok(ThreadPool {
+            workers,
+            sender: sender,
+        })
+    }
     /// Create a new ThreadPool.
     ///
     /// The size is the number of threads in the pool.
